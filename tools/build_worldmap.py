@@ -12,7 +12,7 @@ from shapely.geometry import MultiPolygon, Polygon, box
 
 warnings.filterwarnings("ignore")
 
-VISITED = {"MAR", "USA"}
+VISITED = {"MAR", "USA", "ESP"}
 
 # Equirectangular, cropped to the inhabited band so the map isn't mostly ocean.
 LON0, LON1, LAT0, LAT1 = -180, 180, -58, 84
