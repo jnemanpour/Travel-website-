@@ -1,0 +1,115 @@
+/* Passcode gate — see assets/js/gate.js for what it does and doesn't protect. */
+
+/* Hidden the moment the class lands, so nothing flashes before the prompt.
+   gate.js removes it on success; if the script never runs, so does the class,
+   and the page is simply visible rather than permanently blank. */
+html.gated body > *:not(#gate) { visibility: hidden; }
+html.gated { overflow: hidden; }
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #16130f;
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, #3a2a1e 0%, #16130f 62%);
+  opacity: 1;
+  transition: opacity .26s ease;
+}
+.gate.out { opacity: 0; pointer-events: none; }
+
+.gate-card {
+  width: min(360px, 100%);
+  text-align: center;
+  color: #f2ebe1;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.gate-card.shake { animation: gate-shake .34s cubic-bezier(.36,.07,.19,.97); }
+@keyframes gate-shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-7px); }
+  40%, 60% { transform: translateX(7px); }
+}
+
+.gate-mark { margin-bottom: 20px; }
+.gate-mark svg {
+  width: 40px; height: 40px;
+  fill: none;
+  stroke: #e08a52;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.gate-card h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 31px;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  margin: 0 0 10px;
+}
+.gate-card p {
+  color: #b6a99b;
+  font-size: 14.5px;
+  line-height: 1.55;
+  margin: 0 0 26px;
+}
+
+.gate-card input {
+  width: 100%;
+  padding: 13px 16px;
+  font: inherit;
+  font-size: 16px;               /* 16px keeps iOS from zooming the field */
+  color: #f2ebe1;
+  background: rgba(255,255,255,.06);
+  border: 1px solid #3a3229;
+  border-radius: 9px;
+  outline: none;
+  text-align: center;
+  letter-spacing: .06em;
+  transition: border-color .2s ease, background .2s ease;
+}
+.gate-card input::placeholder { color: #7d7268; letter-spacing: normal; }
+.gate-card input:focus { border-color: #e08a52; background: rgba(255,255,255,.09); }
+
+.gate-card button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px 16px;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #16130f;
+  background: #e08a52;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .2s ease, transform .15s ease;
+}
+.gate-card button:hover { background: #eb9a64; }
+.gate-card button:active { transform: scale(.985); }
+
+.gate-err {
+  min-height: 20px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #e88b7a;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate, .gate-card button { transition: none; }
+  .gate-card.shake { animation: none; }
+}

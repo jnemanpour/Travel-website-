@@ -110,3 +110,24 @@ begin before the whole clip has downloaded.
 
 Served by GitHub Pages from the default branch. `.nojekyll` keeps Pages from running
 the files through Jekyll.
+
+## Passcode
+
+The site sits behind a passcode prompt (`assets/js/gate.js`). To change it:
+
+```bash
+python3 tools/set_passcode.py "new passcode"
+```
+
+Only the SHA-256 hash goes into the repo — the passcode itself never does. It
+unlocks once per browser session and carries across every page.
+
+**What it protects, and what it doesn't.** It stops someone who stumbles onto
+the URL from reading the site. It does *not* protect the photos and clips:
+GitHub Pages serves any file to anyone who requests it by name, and this check
+runs in the browser, after the files are already reachable. While the repo is
+public they are also downloadable straight from github.com. Treat it as a
+doormat, not a lock.
+
+For real protection, host on Cloudflare Pages behind Cloudflare Access — free
+for up to 50 users, and it authenticates at the edge before any file is served.
