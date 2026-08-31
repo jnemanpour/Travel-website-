@@ -113,21 +113,38 @@ the files through Jekyll.
 
 ## Passcode
 
-The site sits behind a passcode prompt (`assets/js/gate.js`). To change it:
+The site sits behind a passcode prompt. The passcode itself is **not in this
+repo** — it lives in the `SITE_PASSCODE` repository secret, and the deploy
+stamps a fresh salt and a PBKDF2 verifier into `assets/js/gate.js` on the way
+out.
+
+To set or change it: **Settings → Secrets and variables → Actions → New
+repository secret**, named `SITE_PASSCODE`. Re-run the deploy workflow and the
+new passcode is live. No commit needed, and it never appears in git history.
+
+The build fails rather than publishing an open site if the secret is missing,
+and a second step confirms the verifier actually landed. A failed deploy leaves
+the previous version serving, so the site does not go down.
+
+To try it locally:
 
 ```bash
-python3 tools/set_passcode.py "new passcode"
+SITE_PASSCODE="whatever" python3 tools/inject_passcode.py
+# ...then restore the placeholders before committing:
+git checkout -- assets/js/gate.js
 ```
-
-Only the SHA-256 hash goes into the repo — the passcode itself never does. It
-unlocks once per browser session and carries across every page.
 
 **What it protects, and what it doesn't.** It stops someone who stumbles onto
 the URL from reading the site. It does *not* protect the photos and clips:
 GitHub Pages serves any file to anyone who requests it by name, and this check
 runs in the browser, after the files are already reachable. While the repo is
-public they are also downloadable straight from github.com. Treat it as a
-doormat, not a lock.
+public they are also downloadable straight from github.com.
+
+The verifier is unavoidably readable in the served JavaScript, which is why it
+is PBKDF2 with 250,000 iterations over a random salt rather than a plain hash —
+a bare SHA-256 of a short passcode falls to a wordlist in seconds. That raises
+the cost of attacking it offline; it does not change the fact that this is a
+doormat rather than a lock.
 
 For real protection, host on Cloudflare Pages behind Cloudflare Access — free
 for up to 50 users, and it authenticates at the edge before any file is served.

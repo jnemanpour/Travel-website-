@@ -1,33 +1,35 @@
 /* ============================================================
    Passcode gate.
 
-   WHAT THIS DOES: keeps the site from being readable by someone who
-   stumbles onto the URL. The passcode is never stored in the page — only
-   its SHA-256 hash — so it can't be read out of the source.
+   The passcode lives in the SITE_PASSCODE repository secret, never in this
+   repo. tools/inject_passcode.py stamps a salt and a PBKDF2 verifier into the
+   placeholders below during the Pages deploy.
+
+   PBKDF2 rather than a plain hash because the verifier is, by necessity,
+   readable in the served JavaScript — the check runs in the browser. A bare
+   SHA-256 of a short passcode falls to a wordlist in seconds; 250k iterations
+   with a salt makes that expensive instead of instant.
+
+   WHAT THIS DOES: keeps the site from being readable by someone who stumbles
+   onto the URL.
 
    WHAT THIS DOES NOT DO: protect the photos and clips. GitHub Pages serves
-   every file to anyone who asks for it by name, and this check runs in the
-   browser, after the files are already reachable. Anyone who knows a path
-   like assets/gallery/full/x.jpg can fetch it without ever seeing this
-   prompt. Treat it as a doormat, not a lock.
-
-   To change the passcode:  python3 tools/set_passcode.py "new passcode"
+   every file to anyone who asks for it by name, and this check runs after
+   those files are already reachable. Anyone who knows a path like
+   assets/gallery/full/x.jpg can fetch it without seeing this prompt. While
+   the repo is public they are also downloadable straight from github.com.
+   Treat it as a doormat, not a lock.
    ============================================================ */
 (function () {
   "use strict";
 
-  // SHA-256 of the passcode. Set by tools/set_passcode.py.
-  var HASH = "9203f538f9141274edd5f6908cfe1e6c8454d9b7d54eb4cb967eb760262465cd";
+  /* Stamped at deploy time — see tools/inject_passcode.py. */
+  var SALT = "__SITE_PASSCODE_SALT__";
+  var VERIFIER = "__SITE_PASSCODE_VERIFIER__";
+  var ITERATIONS = 250000;
+
   var KEY = "travels-unlocked";
   var ROOT = document.documentElement;
-
-  function unlocked() {
-    try { return sessionStorage.getItem(KEY) === HASH; } catch (e) { return false; }
-  }
-
-  function remember() {
-    try { sessionStorage.setItem(KEY, HASH); } catch (e) { /* private mode */ }
-  }
 
   function reveal() {
     ROOT.classList.remove("gated");
@@ -35,17 +37,42 @@
     if (g) g.remove();
   }
 
-  async function sha256(text) {
-    var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  /* No passcode stamped in (local checkout, or an injection that didn't run).
+     Fail open rather than bricking the page — the deploy workflow verifies the
+     stamp separately, so an unstamped build should never reach production. */
+  if (VERIFIER.indexOf("__SITE_PASSCODE") === 0) {
+    if (window.console) console.warn("[gate] no passcode stamped in — site is open.");
+    reveal();
+    return;
+  }
+
+  /* Without WebCrypto there is nothing to verify against. */
+  if (!window.crypto || !crypto.subtle) { reveal(); return; }
+
+  try {
+    if (sessionStorage.getItem(KEY) === VERIFIER) { reveal(); return; }
+  } catch (e) { /* private mode — just show the prompt */ }
+
+  function hex(buf) {
     return Array.from(new Uint8Array(buf))
       .map(function (b) { return b.toString(16).padStart(2, "0"); })
       .join("");
   }
 
-  // Without WebCrypto (an http:// origin, say) there is nothing to check
-  // against, so let the page through rather than locking everyone out.
-  if (!window.crypto || !crypto.subtle) { reveal(); return; }
-  if (unlocked()) { reveal(); return; }
+  function unhex(s) {
+    var out = new Uint8Array(s.length / 2);
+    for (var i = 0; i < out.length; i++) out[i] = parseInt(s.substr(i * 2, 2), 16);
+    return out;
+  }
+
+  async function derive(passcode) {
+    var key = await crypto.subtle.importKey(
+      "raw", new TextEncoder().encode(passcode), "PBKDF2", false, ["deriveBits"]);
+    var bits = await crypto.subtle.deriveBits(
+      { name: "PBKDF2", salt: unhex(SALT), iterations: ITERATIONS, hash: "SHA-256" },
+      key, 256);
+    return hex(bits);
+  }
 
   function build() {
     var g = document.createElement("div");
@@ -68,24 +95,45 @@
     document.body.appendChild(g);
 
     var form = g.querySelector("form");
+    var card = g.querySelector(".gate-card");
     var input = g.querySelector("input");
+    var button = g.querySelector("button");
     var err = g.querySelector(".gate-err");
     input.focus();
 
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
       var val = input.value.trim();
-      if (!val) return;
-      var got = await sha256(val);
-      if (got === HASH) {
-        remember();
+      if (!val || button.disabled) return;
+
+      // The derivation takes a beat by design; say so rather than looking stuck.
+      button.disabled = true;
+      var label = button.textContent;
+      button.textContent = "Checking…";
+      err.textContent = "";
+
+      var got;
+      try {
+        got = await derive(val);
+      } catch (e2) {
+        button.disabled = false;
+        button.textContent = label;
+        err.textContent = "Couldn't check that — try reloading.";
+        return;
+      }
+
+      button.disabled = false;
+      button.textContent = label;
+
+      if (got === VERIFIER) {
+        try { sessionStorage.setItem(KEY, VERIFIER); } catch (e3) {}
         g.classList.add("out");
         setTimeout(reveal, 260);
       } else {
         err.textContent = "That's not it. Try again.";
-        g.querySelector(".gate-card").classList.remove("shake");
+        card.classList.remove("shake");
         void g.offsetWidth;
-        g.querySelector(".gate-card").classList.add("shake");
+        card.classList.add("shake");
         input.select();
       }
     });

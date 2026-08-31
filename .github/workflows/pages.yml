@@ -27,6 +27,17 @@ jobs:
       - name: Check every local link resolves
         run: python3 tools/check_links.py
 
+      # The passcode comes from the SITE_PASSCODE repository secret, so it is
+      # never committed. Without it the build stops rather than publishing an
+      # open site.
+      - name: Stamp in the passcode
+        env:
+          SITE_PASSCODE: ${{ secrets.SITE_PASSCODE }}
+        run: python3 tools/inject_passcode.py
+
+      - name: Confirm the passcode actually landed
+        run: python3 tools/inject_passcode.py --check
+
       # Pages has to be switched on once by hand, under
       # Settings -> Pages -> Source -> GitHub Actions. The workflow token is not
       # allowed to create the Pages site itself, so this step fails with
