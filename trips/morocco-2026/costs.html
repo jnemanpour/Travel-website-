@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Costs & Budget — Jay & Raye's Morocco Honeymoon</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../assets/css/gallery.css">
+<style>
+  /* Expense tracker */
+  .tracker-form { display: grid; grid-template-columns: 1.2fr 1.4fr 1fr 0.9fr auto; gap: 10px; align-items: end; margin-top: 8px; }
+  .tracker-form .fld { display: flex; flex-direction: column; gap: 4px; }
+  .tracker-form label { font-size: 0.78em; color: var(--text-light); font-family: 'Lora', serif; letter-spacing: 0.3px; }
+  .tracker-form input, .tracker-form select {
+    font-family: 'Lora', serif; font-size: 0.92em; padding: 9px 11px;
+    border: 1px solid rgba(196,154,60,0.35); border-radius: 10px; background: var(--warm-white); color: var(--text-dark);
+  }
+  .tracker-form input:focus, .tracker-form select:focus { outline: none; border-color: var(--terracotta); box-shadow: 0 0 0 3px rgba(196,101,74,0.12); }
+  .add-btn { background: linear-gradient(135deg, var(--teal), #1A7B6A); color: white; border: none; cursor: pointer; padding: 10px 22px; border-radius: 25px; font-family: 'Lora', serif; font-weight: 500; font-size: 0.9em; transition: all 0.2s ease; }
+  .add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(26,107,90,0.25); }
+  .exp-table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 0.92em; }
+  .exp-table th, .exp-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(196,154,60,0.15); }
+  .exp-table th { font-family: 'Playfair Display', serif; font-size: 0.9em; color: var(--text-dark); }
+  .exp-table td.num, .exp-table th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .exp-table .cat-pill { font-size: 0.78em; padding: 2px 10px; border-radius: 12px; background: var(--sand); color: var(--text-medium); }
+  .del-x { cursor: pointer; color: var(--terracotta); border: none; background: none; font-size: 1.1em; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+  .del-x:hover { background: rgba(196,101,74,0.1); }
+  .tracker-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; margin: 22px 0 6px; }
+  .ts-card { background: linear-gradient(135deg, var(--gold-pale), var(--warm-white)); border: 1px solid rgba(196,154,60,0.18); border-radius: 14px; padding: 16px 18px; text-align: center; }
+  .ts-card .ts-num { font-family: 'Playfair Display', serif; font-size: 1.7em; font-weight: 700; color: var(--terracotta); }
+  .ts-card .ts-lbl { font-size: 0.8em; color: var(--text-light); margin-top: 2px; }
+  .cat-breakdown { margin-top: 16px; font-size: 0.9em; }
+  .cat-bar-row { display: grid; grid-template-columns: 130px 1fr 70px; align-items: center; gap: 10px; margin: 7px 0; }
+  .cat-bar-track { background: var(--sand); border-radius: 8px; height: 14px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--terracotta)); border-radius: 8px; }
+  .tracker-tools { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .tool-btn { font-family: 'Lora', serif; font-size: 0.82em; padding: 7px 16px; border-radius: 20px; border: 1px solid rgba(196,154,60,0.35); background: var(--warm-white); color: var(--text-medium); cursor: pointer; }
+  .tool-btn:hover { background: var(--gold-pale); }
+  .empty-note { text-align: center; color: var(--text-light); font-style: italic; padding: 22px; }
+  @media (max-width: 720px) { .tracker-form { grid-template-columns: 1fr 1fr; } .tracker-form .add-wrap { grid-column: 1 / -1; } .add-btn { width: 100%; } }
+
+  /* ══ Cost chart ══
+     Palette validated with the dataviz validator against this page's surface
+     (#FFFCF7): booked #008A66 vs to-book #B8860B — passes lightness band,
+     chroma floor, CVD separation (ΔE 9.3), normal-vision floor (19.1) and
+     3:1 contrast. Every bar is also direct-labelled, so identity is never
+     carried by colour alone. */
+  .viz { --c-booked:#008A66; --c-tobook:#B8860B; --c-range:rgba(184,134,11,0.18); }
+
+  .split-bar { display:flex; height:34px; border-radius:6px; overflow:hidden; margin:6px 0 10px; background:var(--sand); }
+  .split-seg { display:flex; align-items:center; justify-content:center; font-size:0.82em; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; min-width:0; padding:0 6px; }
+  .split-seg.committed { background:var(--c-booked); border-right:2px solid var(--warm-white); }
+  .split-seg.remaining { background:var(--c-tobook); }
+  .split-key { display:flex; gap:22px; flex-wrap:wrap; font-size:0.85em; color:var(--text-medium); margin-bottom:4px; }
+  .split-key span.k { display:inline-flex; align-items:center; gap:7px; }
+  .swatch { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+  .swatch.booked { background:var(--c-booked); }
+  .swatch.tobook { background:var(--c-tobook); }
+  .swatch.range  { background:var(--c-range); border:1px solid rgba(184,134,11,0.45); }
+
+  /* Label/value gutters are shared by the rows, the gridlines and the axis via
+     these two vars, so the three can never drift out of alignment. */
+  .chart { margin-top:6px; position:relative; --lab:204px; --val:68px; --gap:12px; }
+  .cbar-row { display:grid; grid-template-columns:var(--lab) 1fr var(--val); align-items:center; gap:var(--gap); padding:4px 0; position:relative; }
+  .cbar-row:hover .cbar-fill { filter:brightness(1.08); }
+  .cbar-label { font-size:0.86em; color:var(--text-medium); text-align:right; line-height:1.25; }
+  .cbar-label .tick { color:var(--c-booked); font-weight:700; }
+  .cbar-track { position:relative; height:18px; }
+  .cbar-range { position:absolute; top:4px; height:10px; background:var(--c-range); border-radius:5px; }
+  .cbar-fill { position:absolute; left:0; top:0; height:18px; border-radius:0 4px 4px 0; }
+  .cbar-fill.booked { background:var(--c-booked); }
+  .cbar-fill.tobook { background:var(--c-tobook); }
+  .cbar-val { font-size:0.86em; text-align:right; color:var(--text-dark); font-variant-numeric:tabular-nums; font-weight:600; }
+  .chart-grid { position:absolute; left:calc(var(--lab) + var(--gap)); right:calc(var(--val) + var(--gap)); top:0; bottom:20px; pointer-events:none; }
+  .chart-grid i { position:absolute; top:0; bottom:0; width:1px; background:rgba(196,154,60,0.22); }
+  .chart-axis { position:relative; height:18px; margin-top:4px;
+                margin-left:calc(var(--lab) + var(--gap)); margin-right:calc(var(--val) + var(--gap)); }
+  .chart-axis i { position:absolute; top:0; transform:translateX(-50%); font-size:0.74em; color:var(--text-light); font-variant-numeric:tabular-nums; }
+  .cbar-row[data-tip]:hover::after {
+    content:attr(data-tip); position:absolute; left:200px; bottom:100%; z-index:5;
+    background:var(--midnight); color:#fff; font-size:0.78em; line-height:1.45;
+    padding:7px 11px; border-radius:8px; white-space:pre-line; max-width:290px;
+    box-shadow:0 4px 16px rgba(28,16,20,0.28); pointer-events:none;
+  }
+
+  .todo-item { display:grid; grid-template-columns:1fr auto; gap:10px 16px; align-items:start;
+    padding:14px 16px; margin:9px 0; border-radius:12px; background:var(--warm-white);
+    border:1px solid rgba(196,154,60,0.18); border-left:4px solid var(--c-tobook); }
+  .todo-item.urgent { border-left-color:var(--terracotta); background:linear-gradient(135deg,#FDF5F3,var(--warm-white)); }
+  .todo-item.onTrip { border-left-color:var(--sand-dark); }
+  .todo-name { font-family:'Playfair Display',serif; font-weight:600; color:var(--text-dark); font-size:1.02em; }
+  .todo-note { font-size:0.86em; color:var(--text-light); margin-top:3px; }
+  .todo-cost { font-variant-numeric:tabular-nums; font-weight:600; color:var(--text-dark); white-space:nowrap; }
+  .todo-cost .rng { display:block; font-size:0.76em; color:var(--text-light); font-weight:400; }
+  .todo-tag { display:inline-block; font-size:0.72em; letter-spacing:0.4px; text-transform:uppercase;
+    padding:2px 9px; border-radius:10px; margin-left:8px; vertical-align:1px; }
+  .todo-tag.next { background:rgba(196,101,74,0.14); color:var(--terracotta); font-weight:600; }
+  .todo-tag.trip { background:var(--sand); color:var(--text-light); }
+
+  @media (max-width:640px) {
+    .chart { --lab:112px; --val:58px; --gap:8px; }
+    .split-seg { font-size:0.72em; }
+    .split-key { gap:12px; font-size:0.8em; }
+    .cbar-label { font-size:0.78em; }
+    .cbar-row[data-tip]:hover::after { left:0; max-width:220px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../../index.html" class="tg-home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>All trips</a>
+    <a href="index.html" class="nav-logo">Jay <span class="amp">&</span> Raye <span style="opacity:.6;font-weight:400;">· Morocco</span></a>
+    <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Toggle navigation menu">
+    <label class="nav-burger" for="nav-toggle" aria-hidden="true"><span></span><span></span><span></span></label>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="itinerary.html">Itinerary</a></li>
+      <li><a href="accommodations.html">Stays</a></li>
+      <li><a href="activities.html">Activities</a></li>
+      <li><a href="transport.html">Transport</a></li>
+      <li><a href="costs.html" class="active">Costs</a></li>
+      <li class="dropdown"><a href="#" aria-haspopup="true">Cities</a>
+        <ul class="dropdown-menu">
+          <li><a href="marrakech.html"><span class="menu-num">1</span>Marrakech</a></li>
+          <li><a href="sahara.html"><span class="menu-num">2</span>Sahara Desert</a></li>
+          <li><a href="fes.html"><span class="menu-num">3</span>Fes</a></li>
+          <li><a href="chefchaouen.html"><span class="menu-num">4</span>Chefchaouen</a></li>
+          <li><a href="casablanca.html"><span class="menu-num">5</span>Casablanca</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+
+<div class="hero city-hero theme-ocean">
+  <div class="hero-pattern"></div><div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Budget & Spending</div>
+    <h1>Costs</h1>
+    <div class="hero-sub">What it costs — and a live tracker for what we actually spend</div>
+  </div>
+</div>
+
+<!-- COST OVERVIEW + CHART -->
+<div class="section viz">
+  <h2>What This Trip Costs</h2>
+  <p class="section-subtitle">Cash for the two of us &middot; 11 nights &middot; USD &middot; flights &amp; Marrakech largely covered by points</p>
+
+  <div class="tracker-summary" style="margin-top:4px;">
+    <div class="ts-card"><div class="ts-num">~$6,637</div><div class="ts-lbl">Projected total</div></div>
+    <div class="ts-card"><div class="ts-num" style="color:#008A66;">$1,564</div><div class="ts-lbl">Paid so far</div></div>
+    <div class="ts-card"><div class="ts-num" style="color:var(--terracotta);">$3,383</div><div class="ts-lbl">Booked, due on the trip</div></div>
+    <div class="ts-card"><div class="ts-num" style="color:#B8860B;">$1,690</div><div class="ts-lbl">Still to book</div></div>
+  </div>
+
+  <h3>Committed vs. still to book</h3>
+  <div class="split-key">
+    <span class="k"><span class="swatch booked"></span> Committed &mdash; $4,947 (75%)</span>
+    <span class="k"><span class="swatch tobook"></span> Still to book &mdash; $1,690 (25%)</span>
+  </div>
+  <div class="split-bar" role="img" aria-label="Of a projected $6,637 total, $4,947 is committed and $1,690 is still to book.">
+    <div class="split-seg committed" style="width:74.5%;">$4,947 committed</div>
+    <div class="split-seg remaining" style="width:25.5%;">$1,690 to book</div>
+  </div>
+  <p style="font-size:0.85em;color:var(--text-light);margin-top:2px;">Of the $4,947 committed, <strong>$1,564 is already paid</strong> and <strong>$3,383 is settled on the trip</strong> &mdash; MAD 18,700 to the driver plus the five pay-at-property hotels ($31.70 at La Mamounia, ~$496 at Eden Boutique, &euro;165 at Riad Madu, ~&euro;400 at Lina Ryad, ~$212 at Barcel&oacute; Anfa).</p>
+
+  <h3>Where the money goes</h3>
+  <div class="split-key">
+    <span class="k"><span class="swatch booked"></span> Booked &mdash; price is fixed</span>
+    <span class="k"><span class="swatch tobook"></span> Estimate &mdash; still to book</span>
+    <span class="k"><span class="swatch range"></span> Lean-to-splurge range</span>
+  </div>
+
+  <div class="chart">
+    <div class="chart-grid"><i style="left:25%"></i><i style="left:50%"></i><i style="left:75%"></i><i style="left:100%"></i></div>
+
+    <div class="cbar-row" data-tip="Private car + driver, whole trip, airport to airport.&#10;MAD 1,700/day × 11 days = MAD 18,700. Agreed.&#10;Paid in dirhams, so the $ moves with the rate.">
+      <span class="cbar-label"><span class="tick">✓</span> Driver &mdash; whole trip</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:83.8%"></span></span>
+      <span class="cbar-val">$2,011</span>
+    </div>
+    <div class="cbar-row" data-tip="Riad Fes — Relais & Châteaux&#10;3 nights, prepaid in full. Fixed.">
+      <span class="cbar-label"><span class="tick">✓</span> Fes &mdash; Riad Fes</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:46.7%"></span></span>
+      <span class="cbar-val">$1,120</span>
+    </div>
+    <div class="cbar-row" data-tip="Balloon, hammam, cooking classes, pottery, guides,&#10;camel trek, and any day trips with the driver.&#10;Lean $350 · Likely $780 · Splurge $1,100">
+      <span class="cbar-label">Activities</span>
+      <span class="cbar-track"><span class="cbar-range" style="left:14.6%;width:31.2%"></span><span class="cbar-fill tobook" style="width:32.5%"></span></span>
+      <span class="cbar-val">$780</span>
+    </div>
+    <div class="cbar-row" data-tip="~11 days for two.&#10;Lean $400 · Likely $600 · Splurge $900">
+      <span class="cbar-label">Food &amp; drink</span>
+      <span class="cbar-track"><span class="cbar-range" style="left:16.7%;width:20.8%"></span><span class="cbar-fill tobook" style="width:25.0%"></span></span>
+      <span class="cbar-val">$600</span>
+    </div>
+    <div class="cbar-row" data-tip="Eden Boutique Hotel &amp; Spa, Boumalne Dades&#10;1 night, Aug 27–28 — due at the property. Fixed.">
+      <span class="cbar-label"><span class="tick">✓</span> Dades &mdash; Eden Boutique</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:20.7%"></span></span>
+      <span class="cbar-val">$496</span>
+    </div>
+    <div class="cbar-row" data-tip="Lina Ryad & Spa, Chefchaouen&#10;2 nights, €400 — due at the property. Fixed.">
+      <span class="cbar-label"><span class="tick">✓</span> Chefchaouen &mdash; Lina Ryad</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:18.3%"></span></span>
+      <span class="cbar-val">$440</span>
+    </div>
+    <div class="cbar-row" data-tip="La Mamounia, Marrakech&#10;3 nights. $1,953 total, less $1,591.63 in Amex points. Fixed.">
+      <span class="cbar-label"><span class="tick">✓</span> Marrakech &mdash; La Mamounia</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:15.1%"></span></span>
+      <span class="cbar-val">$362</span>
+    </div>
+    <div class="cbar-row" data-tip="Barceló Anfa Casablanca&#10;1 night, Sep 3–4 — due at the property. Fixed.">
+      <span class="cbar-label"><span class="tick">✓</span> Casablanca &mdash; Barcel&oacute; Anfa</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:8.8%"></span></span>
+      <span class="cbar-val">$212</span>
+    </div>
+    <div class="cbar-row" data-tip="Riad Madu, Merzouga&#10;1 night, Aug 28–29, €165 — due at the property. Fixed.">
+      <span class="cbar-label"><span class="tick">✓</span> Merzouga &mdash; Riad Madu</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:8.0%"></span></span>
+      <span class="cbar-val">$192</span>
+    </div>
+    <div class="cbar-row" data-tip="Guides, museum entries, SIM card, souvenirs,&#10;and the driver's tip.&#10;Lean $100 · Likely $190 · Splurge $300">
+      <span class="cbar-label">Tips &amp; misc.</span>
+      <span class="cbar-track"><span class="cbar-range" style="left:4.2%;width:8.3%"></span><span class="cbar-fill tobook" style="width:7.9%"></span></span>
+      <span class="cbar-val">$190</span>
+    </div>
+    <div class="cbar-row" data-tip="Medical + trip cancellation.&#10;Lean $90 · Likely $120 · Splurge $150">
+      <span class="cbar-label">Travel insurance</span>
+      <span class="cbar-track"><span class="cbar-range" style="left:3.75%;width:2.5%"></span><span class="cbar-fill tobook" style="width:5.0%"></span></span>
+      <span class="cbar-val">$120</span>
+    </div>
+    <div class="cbar-row" data-tip="LAX ⇄ Casablanca nonstop, both of us.&#10;158,706 Chase points + $114 cash. Fixed.">
+      <span class="cbar-label"><span class="tick">✓</span> Flights</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:4.8%"></span></span>
+      <span class="cbar-val">$114</span>
+    </div>
+
+    <div class="chart-axis"><i style="left:0">$0</i><i style="left:25%">$600</i><i style="left:50%">$1,200</i><i style="left:75%">$1,800</i><i style="left:100%">$2,400</i></div>
+  </div>
+
+  <div class="tip" style="margin-top:20px;"><strong>Bottom line:</strong> the honeymoon lands near <strong>$6,640</strong> at a comfortable pace &mdash; roughly <strong>$5,700 lean</strong> to <strong>$7,300 splurge</strong>. Hiring the driver for the whole trip rather than just the desert added about <strong>$1,000 net</strong> after the city transfers it replaces, and pushed the committed share to <strong>three-quarters</strong> of the budget. What's left to decide is mostly activities and food.</div>
+</div>
+
+<!-- WHAT'S BOOKED -->
+<div class="section">
+  <h2>What's Locked In</h2>
+  <div class="booking-card flight">
+    <div class="card-header"><span class="card-title">✈️ Flights — Royal Air Maroc (round trip, 2 travelers)</span><span class="card-price flight-price">$114 out of pocket</span></div>
+    <div class="card-details">
+      <span>Paid with <strong>158,706 Chase points + $114</strong> to card · Confirmation BLEYOX · agency ref H6HTV9</span>
+      <span>Out: <strong>AT 251</strong> Sun Aug 23, LAX 10:20 am → CMN 5:25 am +1 · Back: <strong>AT 250</strong> Fri Sep 4, CMN 4:00 am → LAX 8:20 am</span>
+      <span>Nonstop both ways · Eco Essential fare · cash value was ~$1,701 <a href="index.html#flights">full flight details →</a></span>
+    </div>
+  </div>
+  <div class="booking-card" style="border:2px solid var(--teal);">
+    <div class="card-header"><span class="card-title">🏨 Marrakech — La Mamounia (3 nights, Aug 24–27)</span><span class="card-price" style="background:linear-gradient(135deg,#1A6B5A,#155244);">$361.54 out of pocket</span></div>
+    <div class="card-details">
+      <span>Paid with <strong>159,163 Amex Membership Rewards points + $329.84</strong> to the card · Trip ref. ZO-AX1070-76125</span>
+      <span>$1,953.17 total value · points covered $1,591.63 · $31.70 mandatory tax still due at the property</span>
+      <span>Booked through Amex Fine Hotels + Resorts on Jul 28, 2026 <em>(replaces the cancelled IZZA Marrakech booking)</em></span>
+    </div>
+  </div>
+  <div class="booking-card" style="border:2px solid var(--teal);">
+    <div class="card-header"><span class="card-title">🏨 Fes — Riad Fes, Relais &amp; Châteaux (3 nights, Aug 29–Sep 1)</span><span class="card-price" style="background:linear-gradient(135deg,#1A6B5A,#155244);">~$1,120 prepaid</span></div>
+    <div class="card-details">
+      <span>MAD 11,188.60 prepaid in full including tax · nothing due at the property · booked under Rina Schiller</span>
+      <span>&ldquo;3 nights for the price of 2&rdquo; rate · Confirmation <strong>26607SG021422</strong> · free cancellation until ~Aug 8, 2026</span>
+    </div>
+  </div>
+  <div class="booking-card" style="border:2px solid var(--teal);">
+    <div class="card-header"><span class="card-title">🏨 Chefchaouen — Lina Ryad &amp; Spa (2 nights, Sep 1–3)</span><span class="card-price" style="background:linear-gradient(135deg,#C4654A,#A8533C);">&euro;400 due at property</span></div>
+    <div class="card-details">
+      <span>Junior Suite, breakfast included · &euro;200/night · incl. &euro;36.36 VAT and &euro;5.40 city tax · Booking ref <strong>WTB1AE7494</strong></span>
+      <span style="color: var(--terracotta); font-weight: 700;">⚠️ Not prepaid — the full &euro;400 (~$440) is paid on arrival by Visa/Mastercard or cash. Free to cancel until Fri Aug 29.</span>
+    </div>
+  </div>
+  <div class="booking-card" style="border:2px solid var(--teal);">
+    <div class="card-header"><span class="card-title">🏨 Dades — Eden Boutique Hotel &amp; Spa (1 night, Aug 27–28)</span><span class="card-price" style="background:linear-gradient(135deg,#C4654A,#A8533C);">~$496 due at property</span></div>
+    <div class="card-details">
+      <span>Double Room with Mountain View, Boumalne Dades · Booking.com confirmation <strong>6043211217</strong> · PIN 2558</span>
+      <span style="color: var(--terracotta); font-weight: 700;">⚠️ Reserved with Visa but not charged — the property takes the final payment. The priciest of the three new bookings; worth a look at what else is available in Boumalne if we want to trim.</span>
+    </div>
+  </div>
+  <div class="booking-card" style="border:2px solid var(--teal);">
+    <div class="card-header"><span class="card-title">🏨 Merzouga — Riad Madu (1 night, Aug 28–29)</span><span class="card-price" style="background:linear-gradient(135deg,#C4654A,#A8533C);">&euro;165 due at property</span></div>
+    <div class="card-details">
+      <span>Suite at the edge of Erg Chebbi · Booking.com confirmation <strong>5476322580</strong> · PIN 0293</span>
+      <span style="color: var(--terracotta); font-weight: 700;">⚠️ &euro;0 paid, &euro;165 (~$192) outstanding — Booking.com offers a "Pay now" option if we'd rather settle it early. The sunset camel trek is <em>not</em> included.</span>
+    </div>
+  </div>
+  <div class="booking-card" style="border:2px solid var(--teal);">
+    <div class="card-header"><span class="card-title">🏨 Casablanca — Barcel&oacute; Anfa (1 night, Sep 3–4)</span><span class="card-price" style="background:linear-gradient(135deg,#C4654A,#A8533C);">~$212 due at property</span></div>
+    <div class="card-details">
+      <span>Premium Sea View Double room · 44 Boulevard d'Anfa · Booking.com confirmation <strong>5476331697</strong> · PIN 1399</span>
+      <span>Dates corrected from the original Aug 28&ndash;29 booking ✓ · check-in 15:00&ndash;00:00, checkout 07:00&ndash;12:00</span>
+      <span style="color: var(--terracotta); font-weight: 700;">⚠️ Effectively non-refundable now &mdash; free cancellation ran for only 27 minutes after booking. Budget separately for a ~1:30 am car to CMN; there's no hotel shuttle.</span>
+    </div>
+  </div>
+  <div class="booking-card" style="border:2px solid var(--teal);">
+    <div class="card-header"><span class="card-title">🚙 Private car &amp; driver — the whole trip, airport to airport</span><span class="card-price" style="background:linear-gradient(135deg,#C4654A,#A8533C);">MAD 18,700 (~$2,011)</span></div>
+    <div class="card-details">
+      <span>Every day from the CMN pickup on <strong>Aug 24</strong> to the 1:30 am airport run on <strong>Sep 4</strong> · <strong>MAD 1,700/day &times; 11 days</strong> · rate held despite the recent fuel-price rise</span>
+      <span>~<strong>$183/day</strong>, or about <strong>$91 each</strong>, for a private car and driver on call. Converted at the <strong>9.30 MAD/$</strong> rate he quoted; we pay in dirhams and in cash.</span>
+      <span>This replaces every separate transfer we had budgeted &mdash; airport pickup, the 3-day desert driver, Fes&rarr;Chefchaouen, Chefchaouen&rarr;Casablanca and the pre-dawn airport run (~$993 in total), so the <strong>net add is about $1,000</strong>.</span>
+      <span style="color: var(--terracotta); font-weight: 700;">⚠️ Two things to settle before we go: <strong>(1)</strong> whether the Sep 4 airport run makes it 12 days (MAD 20,400 / ~$2,194); <strong>(2)</strong> whether the rate covers fuel, tolls and <strong>his own room and meals for eleven nights</strong>. His tip is separate. <a href="transport.html#cost">Full breakdown &rarr;</a></span>
+    </div>
+  </div>
+  <div class="tip"><strong>Huge win:</strong> flights are almost entirely on Chase points and Marrakech is almost entirely on Amex points — between them we've covered about <strong>$3,654 of value for $476 in cash</strong>. 🎉</div>
+  <div class="tip"><strong>Paid vs. still owed:</strong> only <strong>$1,564 is actually paid</strong> (flights $114 + La Mamounia $329.84 + Riad Fes ~$1,120). A much larger <strong>~$3,383 is committed but unpaid</strong> and settles in person, in three currencies &mdash; MAD 18,700 to the driver, plus $31.70 at La Mamounia checkout, ~$496 at Eden Boutique, &euro;165 at Riad Madu, ~&euro;400 at Lina Ryad and ~$212 at Barcel&oacute; Anfa.</div>
+</div>
+
+<!-- CASH PLAN -->
+<div class="section viz" id="cash">
+  <h2>The Cash Plan</h2>
+  <p class="section-subtitle">Bringing <strong>$3,500 USD</strong> &middot; what it covers and what goes on a card</p>
+
+  <p class="body">Bringing dollars to exchange is the right call. The driver alone wants <strong>MAD 18,700</strong> in cash, and Moroccan ATMs typically cap around MAD 2,000&ndash;4,000 per withdrawal with a fee each time &mdash; that would have meant five or six separate trips to a machine. Walking in with dollars sidesteps the whole problem.</p>
+
+  <div class="tracker-summary" style="margin-top:4px;">
+    <div class="ts-card"><div class="ts-num">~$4,953</div><div class="ts-lbl">Total spend on the ground</div></div>
+    <div class="ts-card"><div class="ts-num" style="color:#008A66;">$3,500</div><div class="ts-lbl">Cash we're bringing</div></div>
+    <div class="ts-card"><div class="ts-num" style="color:var(--terracotta);">$1,372</div><div class="ts-lbl">Hotels &mdash; put these on a card</div></div>
+  </div>
+
+  <div class="tip alert"><strong>⚠️ $3,500 does not cover everything &mdash; and it isn't meant to.</strong> Total spend once we land is about <strong>$4,953</strong>. The cash works only if the <strong>five pay-at-property hotels go on a credit card</strong> (~$1,372). All five take cards &mdash; Barcel&oacute; is a chain, Lina Ryad explicitly accepts Visa/Mastercard, and the two Booking.com stays are card-on-file. Pay those in cash and we run roughly <strong>$1,450 short</strong>.</div>
+
+  <h3>What the $3,500 is actually for</h3>
+  <div class="chart" style="--lab:190px;">
+    <div class="cbar-row" data-tip="MAD 18,700, cash, in dirhams.&#10;The single reason we're bringing dollars.">
+      <span class="cbar-label">Driver (MAD 18,700)</span>
+      <span class="cbar-track"><span class="cbar-fill booked" style="width:57.5%"></span></span>
+      <span class="cbar-val">$2,011</span>
+    </div>
+    <div class="cbar-row" data-tip="Camel trek, entrance fees, souk purchases,&#10;street food, mint tea, taxis within cities.">
+      <span class="cbar-label">Day-to-day cash</span>
+      <span class="cbar-track"><span class="cbar-fill tobook" style="width:25.7%"></span></span>
+      <span class="cbar-val">~$900</span>
+    </div>
+    <div class="cbar-row" data-tip="11 days with the same driver is a real tip —&#10;MAD 1,500–2,000 is a reasonable range.&#10;Plus guides, riad staff, porters.">
+      <span class="cbar-label">Tips (driver + guides)</span>
+      <span class="cbar-track"><span class="cbar-fill tobook" style="width:11.4%"></span></span>
+      <span class="cbar-val">~$400</span>
+    </div>
+    <div class="cbar-row" data-tip="Slack for a rate that comes in low,&#10;or anything unplanned.">
+      <span class="cbar-label">Buffer</span>
+      <span class="cbar-track"><span class="cbar-fill" style="width:5.4%;background:var(--sand-dark);"></span></span>
+      <span class="cbar-val">~$190</span>
+    </div>
+  </div>
+
+  <h3>What $3,500 becomes in dirhams</h3>
+  <p class="body">He quoted <strong>9.30 MAD/$</strong>. Where we exchange moves this more than it looks &mdash; across a $3,500 conversion, half a point of rate is roughly MAD 1,750 (~$180).</p>
+  <div class="chart" style="--lab:150px;">
+    <div class="cbar-row"><span class="cbar-label">@ 9.30 (poor rate)</span><span class="cbar-track"><span class="cbar-fill tobook" style="width:93.0%"></span></span><span class="cbar-val">32,550</span></div>
+    <div class="cbar-row"><span class="cbar-label">@ 9.50</span><span class="cbar-track"><span class="cbar-fill tobook" style="width:95.0%"></span></span><span class="cbar-val">33,250</span></div>
+    <div class="cbar-row"><span class="cbar-label">@ 9.80</span><span class="cbar-track"><span class="cbar-fill booked" style="width:98.0%"></span></span><span class="cbar-val">34,300</span></div>
+    <div class="cbar-row"><span class="cbar-label">@ 10.00 (good rate)</span><span class="cbar-track"><span class="cbar-fill booked" style="width:100%"></span></span><span class="cbar-val">35,000</span></div>
+  </div>
+  <p style="font-size:0.85em;color:var(--text-light);">After paying the driver his MAD 18,700, that leaves roughly <strong>MAD 13,900&ndash;16,300</strong> (~$1,490&ndash;1,630) for everything else &mdash; comfortable for eleven days of food, entries and tips once the hotels are on a card.</p>
+
+  <h3>Practical notes</h3>
+  <div class="sight-grid">
+    <div class="sight-card"><h4><span class="pin">◆</span> Bring crisp $100 bills</h4><p>Exchange counters pay the best rate for clean, new, large-denomination notes and may refuse torn, marked or older-series bills outright. Ask the bank for new ones.</p></div>
+    <div class="sight-card"><h4><span class="pin">◆</span> Don't exchange it all at once</h4><p>The dirham is a closed currency &mdash; we can't legally take more than about MAD 2,000 out of the country, and converting leftovers back needs the exchange receipts. Change it in tranches and <strong>keep every receipt</strong>.</p></div>
+    <div class="sight-card"><h4><span class="pin">◆</span> Skip the airport counter for the bulk</h4><p>Change just enough on arrival for the first day or two; city bureaux de change and banks generally beat airport and hotel desks. Never exchange at a hotel front desk.</p></div>
+    <div class="sight-card"><h4><span class="pin">◆</span> Split it up</h4><p>$3,500 is a lot to carry. Divide it between the two of us and two bags, and use the room safe &mdash; La Mamounia, Riad Fes and Barcel&oacute; all have them.</p></div>
+    <div class="sight-card"><h4><span class="pin">◆</span> No declaration needed</h4><p>Both US and Moroccan rules only require declaring cash around the <strong>$10,000</strong> mark, so $3,500 crosses without paperwork either direction.</p></div>
+    <div class="sight-card"><h4><span class="pin">◆</span> Still bring the cards</h4><p>One credit card with <strong>no foreign-transaction fee</strong> for the five hotels, and a debit card as backup if the cash runs short. Tell both banks we'll be in Morocco.</p></div>
+  </div>
+
+  <div class="tip"><strong>Ask the driver about staged payments anyway.</strong> Paying him in two or three instalments across the trip rather than one lump at the end is normal, and it means we're not carrying the full MAD 18,700 on us from day one.</div>
+</div>
+
+<!-- STILL TO BOOK -->
+<div class="section" id="tobook">
+  <h2>Still to Book</h2>
+  <p class="section-subtitle">Seven things left &middot; about <strong>$1,690</strong> of the budget &middot; no lodging or transport among them</p>
+
+  <div class="todo-item urgent">
+    <div><span class="todo-name">Settle the driver's terms in writing</span><span class="todo-tag next">Do this first</span>
+      <div class="todo-note">11 days or 12? And does MAD 1,700/day cover fuel, tolls and <strong>his own room and meals</strong> for eleven nights? A misunderstanding here is worth several hundred dollars. Ask about staged payments too. <a href="transport.html#cost">Breakdown &rarr;</a></div></div>
+    <div class="todo-cost">$0<span class="rng">already agreed</span></div>
+  </div>
+
+  <div class="todo-item urgent">
+    <div><span class="todo-name">Sunset camel trek at Merzouga</span><span class="todo-tag next">Book next</span>
+      <div class="todo-note">Not included at Riad Madu or in the driver's rate &mdash; ask the riad to arrange it for the evening of Aug 28. Usually modest per person. <a href="accommodations.html#sahara">Riad Madu details &rarr;</a></div></div>
+    <div class="todo-cost">&mdash;<span class="rng">in Activities</span></div>
+  </div>
+
+  <div class="todo-item">
+    <div><span class="todo-name">Day trips for the five city days</span>
+      <div class="todo-note">The car is paid for on Aug 25&ndash;26, Aug 30&ndash;31 and Sep 2, when the medinas are car-free &mdash; roughly <strong>MAD 8,500 (~$914)</strong> of the total. Ourika Valley, Meknès &amp; Volubilis, and the Akchour waterfalls all become easy. <a href="transport.html#schedule">See the day-by-day &rarr;</a></div></div>
+    <div class="todo-cost">&mdash;<span class="rng">entry fees only</span></div>
+  </div>
+
+  <div class="todo-item">
+    <div><span class="todo-name">Experiences &amp; activities</span>
+      <div class="todo-note">Hot air balloon, couples hammam, two cooking classes, pottery workshop, guided medina tours. <a href="activities.html">Activities &rarr;</a></div></div>
+    <div class="todo-cost">$780<span class="rng">$350&ndash;$1,100</span></div>
+  </div>
+
+  <div class="todo-item">
+    <div><span class="todo-name">Travel insurance</span>
+      <div class="todo-note">Medical + trip cancellation. Worth buying before the Riad Fes cancellation window closes ~Aug 8.</div></div>
+    <div class="todo-cost">$120<span class="rng">$90&ndash;$150</span></div>
+  </div>
+
+  <div class="todo-item onTrip">
+    <div><span class="todo-name">Food &amp; drink</span><span class="todo-tag trip">Pay as we go</span>
+      <div class="todo-note">Roughly 10 days for two &mdash; street food, riad dinners, restaurants. Nothing to book.</div></div>
+    <div class="todo-cost">$600<span class="rng">$400&ndash;$900</span></div>
+  </div>
+
+  <div class="todo-item onTrip">
+    <div><span class="todo-name">Tips, entry fees, SIM &amp; misc.</span><span class="todo-tag trip">Pay as we go</span>
+      <div class="todo-note">Guides and drivers, museum entries, a local SIM at the airport, souvenirs.</div></div>
+    <div class="todo-cost">$190<span class="rng">$100&ndash;$300</span></div>
+  </div>
+
+  <div class="tip"><strong>Two deadlines:</strong> Riad Fes is free to cancel until <strong>~Aug 8</strong>; Lina Ryad until <strong>Fri Aug 29</strong>. After those dates both stays are locked in for real.</div>
+</div>
+
+<!-- LIVE TRACKER -->
+<div class="section">
+  <h2>💸 Live Expense Tracker</h2>
+  <p class="section-subtitle">Add expenses as we go — totals update instantly and save in this browser</p>
+
+  <form class="tracker-form" id="expForm" autocomplete="off">
+    <div class="fld"><label for="eDate">Date</label><input type="date" id="eDate" required></div>
+    <div class="fld"><label for="eDesc">What for?</label><input type="text" id="eDesc" placeholder="e.g. Chefchaouen deposit" required></div>
+    <div class="fld"><label for="eCat">Category</label>
+      <select id="eCat">
+        <option>Flights</option><option selected>Lodging</option><option>Desert Tour</option><option>Transport</option><option>Activities</option><option>Food & Drink</option><option>Shopping</option><option>Insurance</option><option>Other</option>
+      </select>
+    </div>
+    <div class="fld"><label for="eAmt">Amount (USD)</label><input type="number" id="eAmt" placeholder="0.00" step="0.01" min="0" required></div>
+    <div class="fld add-wrap"><label>&nbsp;</label><button type="submit" class="add-btn">+ Add</button></div>
+  </form>
+
+  <div class="presets">
+    <span class="presets-label">Quick add (tap to fill, then adjust &amp; press +):</span>
+    <button type="button" class="preset-chip" data-desc="Driver — whole trip, MAD 18,700 (11 days)" data-cat="Transport" data-amt="2011">Driver $2,011</button>
+    <button type="button" class="preset-chip" data-desc="Driver — one day, MAD 1,700" data-cat="Transport" data-amt="183">Driver, 1 day $183</button>
+    <button type="button" class="preset-chip" data-desc="Driver tip" data-cat="Transport" data-amt="">Driver tip</button>
+    <button type="button" class="preset-chip" data-desc="Flights LAX⇄Casablanca (out of pocket)" data-cat="Flights" data-amt="114">Flights $114</button>
+    <button type="button" class="preset-chip" data-desc="La Mamounia, Marrakech (after Amex points)" data-cat="Lodging" data-amt="361.54">La Mamounia $362</button>
+    <button type="button" class="preset-chip" data-desc="Riad Fes, Relais &amp; Châteaux (prepaid)" data-cat="Lodging" data-amt="1120">Riad Fes $1,120</button>
+    <button type="button" class="preset-chip" data-desc="Lina Ryad &amp; Spa, Chefchaouen (€400 at property)" data-cat="Lodging" data-amt="440">Lina Ryad $440</button>
+    <button type="button" class="preset-chip" data-desc="Eden Boutique Hotel &amp; Spa, Dades (at property)" data-cat="Lodging" data-amt="496">Eden Boutique $496</button>
+    <button type="button" class="preset-chip" data-desc="Riad Madu, Merzouga (€165 at property)" data-cat="Lodging" data-amt="192">Riad Madu $192</button>
+    <button type="button" class="preset-chip" data-desc="Barceló Anfa, Casablanca (at property)" data-cat="Lodging" data-amt="212">Barceló Anfa $212</button>
+  </div>
+
+  <div class="tracker-summary">
+    <div class="ts-card"><div class="ts-num" id="sumTotal">$0</div><div class="ts-lbl">Total Spent</div></div>
+    <div class="ts-card"><div class="ts-num" id="sumCount">0</div><div class="ts-lbl">Expenses Logged</div></div>
+    <div class="ts-card"><div class="ts-num" id="sumPerPerson">$0</div><div class="ts-lbl">Per Person</div></div>
+    <div class="ts-card"><div class="ts-num" id="sumVsBudget">—</div><div class="ts-lbl">vs. Projected Total ($4,886)</div></div>
+  </div>
+
+  <div class="cat-breakdown" id="catBreakdown"></div>
+
+  <table class="exp-table" id="expTable">
+    <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="num">Amount</th><th></th></tr></thead>
+    <tbody id="expBody"></tbody>
+  </table>
+  <div class="empty-note" id="emptyNote">No expenses yet — add the first one above. (Tip: log Riad deposits as you book them!)</div>
+
+  <div class="tracker-tools">
+    <button class="tool-btn" id="exportBtn">⬇ Export CSV</button>
+    <button class="tool-btn" id="clearBtn">🗑 Clear all</button>
+    <span style="font-size:0.8em;color:var(--text-light);align-self:center;">Saved automatically in this browser (localStorage).</span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Booking Checklist</h2>
+  <p class="section-subtitle">Synced across every page &middot; tap to check off &middot; saved in your browser</p>
+  <div class="booking-checklist-mount"></div>
+</div>
+
+<div class="moroccan-divider"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L14 8.5L20.5 8.5L15 12.5L17 19L12 15L7 19L9 12.5L3.5 8.5L10 8.5L12 2Z" fill="#C49A3C" opacity="0.4"/></svg></div>
+
+<div class="footer">
+  <span class="footer-ornament">&diams; &diams; &diams;</span>
+  Here's to the adventure of a lifetime — Jay & Raye
+  <div class="footer-links">
+    <a href="index.html">Home</a> · <a href="itinerary.html">Itinerary</a> · <a href="accommodations.html">Stays</a> · <a href="activities.html">Activities</a> · <a href="transport.html">Transport</a> · <a href="costs.html">Costs</a> · <a href="marrakech.html">Marrakech</a> · <a href="sahara.html">Sahara</a> · <a href="fes.html">Fes</a> · <a href="chefchaouen.html">Chefchaouen</a> · <a href="casablanca.html">Casablanca</a>
+  </div>
+</div>
+
+</div>
+
+<script>
+(function() {
+  const KEY = 'morocco_honeymoon_expenses_v1';
+  const BUDGET = 4886; // likely-column total from the planning budget below
+  const fmt = n => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const catColors = {}; // not needed; single gradient
+  let expenses = [];
+
+  try { expenses = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { expenses = []; }
+
+  const $ = id => document.getElementById(id);
+  const body = $('expBody'), emptyNote = $('emptyNote');
+
+  // Seed the date field with today
+  $('eDate').valueAsDate = new Date();
+
+  function save() { localStorage.setItem(KEY, JSON.stringify(expenses)); }
+
+  function render() {
+    body.innerHTML = '';
+    let total = 0;
+    const byCat = {};
+    expenses.slice().sort((a,b) => (a.date||'').localeCompare(b.date||'')).forEach(function(e) {
+      total += Number(e.amt) || 0;
+      byCat[e.cat] = (byCat[e.cat] || 0) + (Number(e.amt) || 0);
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + (e.date || '') + '</td>' +
+        '<td>' + escapeHtml(e.desc) + '</td>' +
+        '<td><span class="cat-pill">' + escapeHtml(e.cat) + '</span></td>' +
+        '<td class="num">' + fmt(Number(e.amt) || 0) + '</td>' +
+        '<td class="num"><button class="del-x" data-id="' + e.id + '" title="Delete">&times;</button></td>';
+      body.appendChild(tr);
+    });
+
+    emptyNote.style.display = expenses.length ? 'none' : 'block';
+    $('expTable').style.display = expenses.length ? 'table' : 'none';
+
+    $('sumTotal').textContent = fmt(total);
+    $('sumCount').textContent = expenses.length;
+    $('sumPerPerson').textContent = fmt(total / 2);
+    const pct = Math.round((total / BUDGET) * 100);
+    $('sumVsBudget').textContent = pct + '%';
+    $('sumVsBudget').style.color = pct > 100 ? '#A8533C' : '#1A6B5A';
+
+    // category breakdown bars
+    const cb = $('catBreakdown');
+    const cats = Object.keys(byCat).sort((a,b) => byCat[b] - byCat[a]);
+    const max = Math.max.apply(null, cats.map(c => byCat[c]).concat([1]));
+    cb.innerHTML = cats.length ? '<h3 style="font-family:\'Playfair Display\',serif;color:var(--terracotta);font-style:italic;font-size:1.05em;margin:6px 0 10px;">By category</h3>' +
+      cats.map(c => '<div class="cat-bar-row"><span>' + escapeHtml(c) + '</span><span class="cat-bar-track"><span class="cat-bar-fill" style="width:' + Math.round((byCat[c]/max)*100) + '%"></span></span><span class="num" style="text-align:right;">' + fmt(byCat[c]) + '</span></div>').join('') : '';
+
+    save();
+  }
+
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  $('expForm').addEventListener('submit', function(ev) {
+    ev.preventDefault();
+    const amt = parseFloat($('eAmt').value);
+    if (!($('eDesc').value.trim()) || isNaN(amt)) return;
+    expenses.push({ id: Date.now() + '' + Math.floor(Math.random()*1000), date: $('eDate').value, desc: $('eDesc').value.trim(), cat: $('eCat').value, amt: amt });
+    $('eDesc').value = ''; $('eAmt').value = '';
+    render();
+  });
+
+  body.addEventListener('click', function(ev) {
+    const btn = ev.target.closest('.del-x');
+    if (!btn) return;
+    expenses = expenses.filter(e => e.id !== btn.dataset.id);
+    render();
+  });
+
+  $('clearBtn').addEventListener('click', function() {
+    if (expenses.length && confirm('Delete all logged expenses? This cannot be undone.')) { expenses = []; render(); }
+  });
+
+  $('exportBtn').addEventListener('click', function() {
+    if (!expenses.length) { alert('No expenses to export yet.'); return; }
+    const rows = [['Date','Description','Category','Amount (USD)']].concat(
+      expenses.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(e => [e.date, e.desc, e.cat, e.amt]));
+    const csv = rows.map(r => r.map(f => '"' + String(f).replace(/"/g,'""') + '"').join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'morocco-honeymoon-expenses.csv';
+    a.click();
+  });
+
+  // Quick-add preset chips fill the form (user can tweak then submit)
+  document.querySelectorAll('.preset-chip').forEach(function(ch){
+    ch.addEventListener('click', function(){
+      $('eDesc').value = ch.dataset.desc || '';
+      if (ch.dataset.cat) $('eCat').value = ch.dataset.cat;
+      $('eAmt').value = ch.dataset.amt || '';
+      $('eAmt').focus();
+    });
+  });
+
+  render();
+})();
+</script>
+<script src="checklist.js"></script>
+</body>
+</html>

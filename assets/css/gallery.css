@@ -1,0 +1,258 @@
+/* ============================================================
+   Shared trip gallery + media viewer
+   Used by every trip page. Themed via the --tg-* custom props,
+   which each trip may override to match its own palette.
+   ============================================================ */
+
+:root {
+  --tg-accent: #8B3A1B;
+  --tg-scrim: rgba(12, 10, 9, 0.96);
+  --tg-chrome: rgba(255, 255, 255, 0.92);
+  --tg-radius: 4px;
+}
+
+/* ---------- GRID ---------- */
+
+/* Masonry that still reads left-to-right, so the day stays in order.
+   Row spans are set by gallery.js from each item's real aspect ratio;
+   without JS this degrades to a plain auto-row grid. */
+.tg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0 12px;
+  margin-top: 40px;
+  align-items: start;
+}
+.tg-grid.tg-masonry { grid-auto-rows: 4px; }
+@media (max-width: 900px) { .tg-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0 10px; } }
+@media (max-width: 620px) { .tg-grid { grid-template-columns: repeat(2, 1fr); gap: 0 8px; } }
+
+.tg-item {
+  margin: 0 0 12px;
+  position: relative;
+}
+@media (max-width: 620px) { .tg-item { margin-bottom: 8px; } }
+
+.tg-item a {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--tg-radius);
+  background: rgba(0, 0, 0, 0.06);
+  outline-offset: 3px;
+  cursor: zoom-in;
+}
+.tg-item.tg-video a { cursor: pointer; }
+
+/* Natural aspect ratio — no square cropping, so portraits keep their heads. */
+.tg-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.5s cubic-bezier(.2,.7,.2,1), filter 0.35s ease;
+  image-orientation: from-image;
+}
+.tg-item a:hover img { transform: scale(1.04); filter: saturate(1.06); }
+
+/* Play badge on video tiles */
+.tg-item.tg-video a::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 54px; height: 54px;
+  margin: -27px 0 0 -27px;
+  border-radius: 50%;
+  background: rgba(18, 15, 13, 0.55) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E") no-repeat 54% 50% / 26px 26px;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  box-shadow: 0 2px 14px rgba(0,0,0,0.35);
+  transition: transform 0.3s cubic-bezier(.2,.7,.2,1), background-color 0.3s ease;
+  pointer-events: none;
+}
+.tg-item.tg-video a:hover::after { transform: scale(1.1); }
+
+.tg-dur {
+  position: absolute;
+  right: 8px; bottom: 8px;
+  font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #fff;
+  background: rgba(18, 15, 13, 0.62);
+  padding: 4px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.tg-cap {
+  font-size: 12.5px;
+  line-height: 1.45;
+  opacity: 0.68;
+  padding: 7px 2px 0;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- VIEWER ---------- */
+
+.tg-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--tg-scrim);
+  display: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.tg-viewer.tg-open { display: block; }
+.tg-viewer.tg-shown { opacity: 1; }
+
+.tg-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tg-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 20px 92px;
+  box-sizing: border-box;
+  will-change: transform;
+}
+@media (max-width: 620px) { .tg-slide { padding: 56px 8px 84px; } }
+
+.tg-slide img,
+.tg-slide video {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 3px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+  image-orientation: from-image;
+  transform-origin: 0 0;
+}
+.tg-slide video { background: #000; outline: none; }
+.tg-slide img { cursor: zoom-in; }
+.tg-slide.tg-zoomed img { cursor: grab; }
+.tg-slide.tg-zoomed.tg-panning img { cursor: grabbing; }
+
+/* Chrome */
+.tg-bar {
+  position: absolute;
+  left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  color: var(--tg-chrome);
+  z-index: 2;
+  transition: opacity 0.25s ease;
+}
+.tg-bar-top { top: 0; background: linear-gradient(180deg, rgba(0,0,0,0.55), transparent); }
+.tg-viewer.tg-idle .tg-bar { opacity: 0; pointer-events: none; }
+
+.tg-count {
+  font: 500 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+.tg-spacer { flex: 1; }
+
+.tg-btn {
+  appearance: none;
+  border: 0;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--tg-chrome);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  flex: none;
+  padding: 0;
+}
+.tg-btn:hover { background: rgba(255, 255, 255, 0.2); }
+.tg-btn:active { transform: scale(0.93); }
+.tg-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.tg-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Prev / next */
+.tg-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px; height: 52px;
+  z-index: 2;
+}
+.tg-prev { left: 16px; }
+.tg-next { right: 16px; }
+.tg-nav[hidden] { display: none; }
+@media (max-width: 620px) { .tg-nav { display: none; } }
+.tg-viewer.tg-idle .tg-nav { opacity: 0; pointer-events: none; }
+.tg-nav { transition: opacity 0.25s ease, background 0.2s ease, transform 0.2s ease; }
+
+/* Caption */
+.tg-caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 34px 24px 22px;
+  text-align: center;
+  color: var(--tg-chrome);
+  font-size: 14px;
+  line-height: 1.5;
+  background: linear-gradient(0deg, rgba(0,0,0,0.62), transparent);
+  z-index: 2;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.tg-caption span { opacity: 0.9; }
+.tg-viewer.tg-idle .tg-caption { opacity: 0; }
+
+/* Loading spinner */
+.tg-spin {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 30px; height: 30px;
+  margin: -15px 0 0 -15px;
+  border: 2px solid rgba(255,255,255,0.22);
+  border-top-color: rgba(255,255,255,0.85);
+  border-radius: 50%;
+  animation: tg-rot 0.7s linear infinite;
+  z-index: 1;
+  display: none;
+}
+.tg-slide.tg-loading .tg-spin { display: block; }
+@keyframes tg-rot { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-viewer, .tg-bar, .tg-caption, .tg-nav, .tg-item img, .tg-item.tg-video a::after { transition: none; }
+  .tg-spin { animation-duration: 1.6s; }
+}
+
+/* ---------- BACK TO HUB ---------- */
+.tg-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  opacity: 0.72;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+.tg-home:hover { opacity: 1; }
+.tg-home svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
