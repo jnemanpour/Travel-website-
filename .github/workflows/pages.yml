@@ -29,6 +29,9 @@ jobs:
         run: python3 tools/check_links.py
 
       - uses: actions/configure-pages@v5
+        with:
+          # Turn Pages on for the repo if it isn't already.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
