@@ -4,9 +4,13 @@ A single home for our trips. Each trip keeps its own page and its own look;
 the hub at `index.html` is the list that ties them together.
 
 ```
-index.html              the travel list — one card per trip, newest first
+index.html              the hub — hero, stats, world map, trip list
 assets/
+  data/trips.js         every trip: dates, places, coordinates, blurb
+  data/worldmap.js      country outlines, generated (see below)
+  css/site.css          hub styling, light + dark
   css/gallery.css       shared grid + media-viewer styles
+  js/site.js            renders stats, map and cards from trips.js
   js/gallery.js         shared media viewer (photos and video, one deck)
   covers/               cover images for the hub cards
 trips/
@@ -14,12 +18,28 @@ trips/
   texas-2026/           recap — day-by-day writeup + photo/video gallery
 ```
 
+The hub is driven entirely by `assets/data/trips.js`. Stats, map pins, year
+grouping and the cards are all derived from it — nothing on the hub is
+hand-maintained HTML.
+
 ## Adding a trip
 
 1. Create `trips/<place>-<year>/` and put the trip's `index.html` there.
 2. Add a cover to `assets/covers/` (3:2, ~1200px wide, WebP).
-3. Copy a card in the root `index.html` and edit the dates, title, blurb and facts.
+3. Add an entry to `assets/data/trips.js`. That is the only hub edit — the card,
+   the map pin, the year heading and every stat follow from it.
 4. Link back to the hub with the `tg-home` snippet used by the existing trips.
+
+A trip's badge is computed from its dates on each page load: **Planning** before
+the start date, **Happening now** during, **Recap** after. Nothing to flip by hand.
+
+If the trip visits a country not yet on the map, add its ISO-3166 alpha-3 code to
+`VISITED` in the map generator and re-run it so the country gets highlighted:
+
+```bash
+pip install "geopandas<1.0"
+python3 tools/build_worldmap.py
+```
 
 ## Using the shared gallery
 

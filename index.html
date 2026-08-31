@@ -5,300 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jay &amp; Raye — Travels</title>
 <meta name="description" content="Every trip we've taken, collected in one place.">
+<meta name="theme-color" content="#f7f2e9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
 <meta property="og:title" content="Jay &amp; Raye — Travels">
 <meta property="og:description" content="Every trip we've taken, collected in one place.">
+<meta property="og:image" content="assets/covers/texas-2026.webp">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%239a3f18'/%3E%3Cpath d='M16 6c4.4 0 8 3.6 8 8 0 5.8-8 12-8 12S8 19.8 8 14c0-4.4 3.6-8 8-8z' fill='none' stroke='%23f7f2e9' stroke-width='2.2'/%3E%3Ccircle cx='16' cy='13.8' r='2.8' fill='%23f7f2e9'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --ink: #211c19;
-    --ink-soft: #5f554e;
-    --ink-faint: #8d8078;
-    --paper: #faf6ef;
-    --card: #ffffff;
-    --line: #e6ddd1;
-    --accent: #8b3a1b;
-    --shadow: 0 1px 2px rgba(33,28,25,.05), 0 8px 28px rgba(33,28,25,.07);
-    --shadow-lg: 0 2px 6px rgba(33,28,25,.06), 0 22px 60px rgba(33,28,25,.14);
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: inherit; }
-  .wrap { width: min(1080px, calc(100% - 48px)); margin: 0 auto; }
-  @media (max-width: 620px) { .wrap { width: calc(100% - 32px); } }
-
-  /* ---------- HEADER ---------- */
-  header.masthead {
-    padding: 88px 0 12px;
-    text-align: center;
-  }
-  .eyebrow {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 18px;
-  }
-  header.masthead h1 {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(40px, 7vw, 68px);
-    font-weight: 700;
-    line-height: 1.02;
-    letter-spacing: -0.02em;
-  }
-  header.masthead h1 em { font-style: italic; color: var(--accent); }
-  header.masthead p {
-    margin: 22px auto 0;
-    max-width: 46ch;
-    color: var(--ink-soft);
-    font-size: 16.5px;
-  }
-  .rule {
-    width: 54px; height: 2px;
-    background: var(--accent);
-    opacity: .35;
-    margin: 40px auto 0;
-    border-radius: 2px;
-  }
-
-  /* ---------- TRIP LIST ---------- */
-  .trips { padding: 56px 0 40px; display: grid; gap: 30px; }
-
-  .trip {
-    display: grid;
-    grid-template-columns: 44% 1fr;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
-    position: relative;
-  }
-  .trip:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-  .trip:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
-  @media (max-width: 760px) { .trip { grid-template-columns: 1fr; } }
-
-  .trip-cover {
-    position: relative;
-    min-height: 260px;
-    background: #ded4c6 center/cover no-repeat;
-    overflow: hidden;
-  }
-  @media (max-width: 760px) { .trip-cover { min-height: 200px; aspect-ratio: 16/9; } }
-  .trip-cover img {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform .6s cubic-bezier(.2,.7,.2,1);
-  }
-  .trip:hover .trip-cover img { transform: scale(1.04); }
-
-  /* Illustrated fallback cover for trips with no photos yet */
-  .cover-art {
-    position: absolute; inset: 0;
-    display: grid; place-items: center;
-    background:
-      radial-gradient(120% 90% at 50% 8%, #d9884f 0%, #b8552a 42%, #7c2f16 100%);
-  }
-  .cover-art svg { width: 58%; max-width: 190px; opacity: .92; }
-  .cover-art::after {
-    content: "";
-    position: absolute; inset: 0;
-    background-image:
-      linear-gradient(45deg, rgba(255,255,255,.07) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.07) 75%),
-      linear-gradient(45deg, rgba(255,255,255,.07) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.07) 75%);
-    background-size: 26px 26px;
-    background-position: 0 0, 13px 13px;
-    opacity: .5;
-  }
-
-  .badge {
-    position: absolute;
-    top: 14px; left: 14px;
-    z-index: 2;
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    padding: 6px 11px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.94);
-    color: var(--ink);
-    box-shadow: 0 2px 10px rgba(0,0,0,.18);
-    display: inline-flex; align-items: center; gap: 7px;
-  }
-  .badge.live { background: #1f7a4d; color: #fff; }
-  .badge.live .dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #7ff0b0;
-    animation: pulse 1.9s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
-
-  .trip-body { padding: 34px 34px 30px; display: flex; flex-direction: column; }
-  @media (max-width: 620px) { .trip-body { padding: 26px 22px 24px; } }
-
-  .trip-dates {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-  }
-  .trip-body h2 {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(25px, 3.4vw, 33px);
-    font-weight: 700;
-    line-height: 1.14;
-    letter-spacing: -0.015em;
-    margin: 9px 0 0;
-  }
-  .trip-body h2 a { text-decoration: none; }
-  .trip-body h2 a::after { content: ""; position: absolute; inset: 0; }
-  .trip-where {
-    margin-top: 9px;
-    font-size: 14.5px;
-    color: var(--accent);
-    font-weight: 500;
-  }
-  .trip-body p.blurb {
-    margin-top: 15px;
-    color: var(--ink-soft);
-    font-size: 15px;
-  }
-
-  .facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 20px;
-  }
-  .fact {
-    font-size: 12.5px;
-    color: var(--ink-soft);
-    background: #f4eee4;
-    border: 1px solid var(--line);
-    padding: 5px 11px;
-    border-radius: 999px;
-    white-space: nowrap;
-  }
-
-  .go {
-    margin-top: auto;
-    padding-top: 22px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--accent);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .go svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s ease; }
-  .trip:hover .go svg { transform: translateX(4px); }
-
-  /* ---------- FOOTER ---------- */
-  footer {
-    border-top: 1px solid var(--line);
-    margin-top: 30px;
-    padding: 40px 0 70px;
-    text-align: center;
-    color: var(--ink-faint);
-    font-size: 13.5px;
-  }
-  footer .sig {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-style: italic;
-    font-size: 17px;
-    color: var(--ink-soft);
-    margin-bottom: 8px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .trip, .trip-cover img, .go svg { transition: none; }
-    .badge.live .dot { animation: none; }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<script>
+  /* Set the theme before first paint so a dark-mode reader never sees a light flash. */
+  try {
+    var t = localStorage.getItem("travels-theme");
+    if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
 </head>
 <body>
 
-<header class="masthead">
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark">
+  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2 12h2.4M19.6 12H22M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5a6.8 6.8 0 0 0 10.8 10.8z"/></svg>
+</button>
+
+<header class="hero">
   <div class="wrap">
     <div class="eyebrow">Jay &amp; Raye</div>
     <h1>Where we've <em>been.</em></h1>
-    <p>Every trip, collected in one place — the plans we made, the photos we took, and everything in between.</p>
-    <div class="rule"></div>
+    <p class="sub">Every trip, collected in one place — the plans we made, the photos we took, and everything in between.</p>
+    <div class="stats reveal" id="stats"></div>
   </div>
 </header>
 
-<main class="wrap">
-  <div class="trips">
+<section class="map-section">
+  <div class="wrap">
+    <div class="map-head">
+      <h2>The map so far</h2>
+      <span class="note">Tap a pin to jump to the trip.</span>
+    </div>
+    <div class="map-frame reveal" id="map"></div>
+  </div>
+</section>
 
-    <!-- ═══ MOROCCO ═══ -->
-    <article class="trip">
-      <div class="trip-cover">
-        <span class="badge live"><span class="dot"></span>Happening now</span>
-        <div class="cover-art" role="img" aria-label="Illustrated Moroccan arch">
-          <svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M60 8c26 0 44 20 44 46v98H16V54C16 28 34 8 60 8z"
-                  fill="none" stroke="rgba(255,255,255,.85)" stroke-width="3"/>
-            <path d="M60 30c16 0 27 13 27 29v93H33V59c0-16 11-29 27-29z"
-                  fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
-            <path d="M60 62l5.6 16.8L82 84l-16.4 5.2L60 106l-5.6-16.8L38 84l16.4-5.2z"
-                  fill="rgba(255,255,255,.8)"/>
-          </svg>
-        </div>
+<main class="trips-section">
+  <div class="wrap">
+    <div id="trips"></div>
+    <noscript>
+      <div class="year-block">
+        <div class="year-head"><span class="y">2026</span><span class="rule"></span></div>
+        <ul class="noscript-list">
+          <li><a href="trips/morocco-2026/index.html">Morocco Honeymoon</a> — Aug 23 – Sep 4, 2026</li>
+          <li><a href="trips/texas-2026/index.html">Texas 4th of July</a> — Jul 2 – 5, 2026</li>
+        </ul>
       </div>
-      <div class="trip-body">
-        <div class="trip-dates">Aug 23 – Sep 4, 2026</div>
-        <h2><a href="trips/morocco-2026/index.html">Morocco Honeymoon</a></h2>
-        <div class="trip-where">Marrakech · Sahara · Fes · Chefchaouen · Casablanca</div>
-        <p class="blurb">A one-way arc across Morocco — red-city souks, a night under the stars in the Sahara, the blue lanes of Chefchaouen, and back to the Atlantic to fly home.</p>
-        <div class="facts">
-          <span class="fact">12 days</span>
-          <span class="fact">11 nights</span>
-          <span class="fact">4 cities + the desert</span>
-          <span class="fact">Itinerary &amp; costs</span>
-        </div>
-        <div class="go">Open the trip
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
-      </div>
-    </article>
-
-    <!-- ═══ TEXAS ═══ -->
-    <article class="trip">
-      <div class="trip-cover">
-        <span class="badge">Recap</span>
-        <img src="assets/covers/texas-2026.webp" alt="Under the Fort Worth Stockyards sign" loading="lazy" decoding="async">
-      </div>
-      <div class="trip-body">
-        <div class="trip-dates">Jul 2 – 5, 2026</div>
-        <h2><a href="trips/texas-2026/index.html">Texas 4th of July</a></h2>
-        <div class="trip-where">Fort Worth Stockyards · Dallas</div>
-        <p class="blurb">Four days of rodeo, honky-tonks and pool afternoons — the cattle drive down Exchange Avenue, Billy Bob's after dark, and the Fourth itself out in Dallas.</p>
-        <div class="facts">
-          <span class="fact">4 days</span>
-          <span class="fact">2 cities</span>
-          <span class="fact">54 photos &amp; clips</span>
-          <span class="fact">Full gallery</span>
-        </div>
-        <div class="go">Open the trip
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </div>
-      </div>
-    </article>
-
+    </noscript>
   </div>
 </main>
 
@@ -308,6 +71,10 @@
     <div>Jay &amp; Raye · 2026</div>
   </div>
 </footer>
+
+<script src="assets/data/worldmap.js"></script>
+<script src="assets/data/trips.js"></script>
+<script src="assets/js/site.js" defer></script>
 
 </body>
 </html>
